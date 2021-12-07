@@ -54,7 +54,9 @@ int main(int argc, char *argv[]) {
           char *buffer;
           size_t nbytes = receive(clients[i], (void *)&buffer);
           if (nbytes > 0) {  // closed
-            ssend(clients[i], buffer, nbytes);
+            for (int j = 0; j < nclients; j++) {
+              ssend(clients[i], buffer, nbytes);
+            }
             free(buffer);
           } else {
             // close le client, diminue le nbr de clients
@@ -62,10 +64,8 @@ int main(int argc, char *argv[]) {
             nclients--;
             // On deplace le dernier socket a la place de libre pour ne pas faire de trou.
             clients[i] = clients[nclients];
-          }
-        }
-      }
-    }
+        } }
+    } }
   }
   return 0;
 }
