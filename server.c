@@ -12,6 +12,8 @@
 #include "common.h"
 
 int main(int argc, char *argv[]) {
+  // TODO gestion des erreurs dans les arguments
+
   // create socket with default parameters
   int opt = 1;
   int master_socket = checked(socket(AF_INET, SOCK_STREAM, 0));   
@@ -51,27 +53,35 @@ int main(int argc, char *argv[]) {
     }
     else {
       // Sinon, c'est un message d'un client
+      time_t *time_stamp;
       for (int i = 0; i < nclients; i++) {
         if (FD_ISSET(clients[i], &readfds)) {                       // for each client -> check si quelque chose à lire
           char *buffer;
-          time_t *time_stamp;
           size_t nbytes = receive(clients[i], (void *)&buffer, (void *)&time_stamp);
           if (nbytes > 0) {  // closed
-            for (int j = 0; j < nclients; j++) {
-              ssend(clients[i], buffer, nbytes, time_stamp);
-            }
+            send_to_clients(buffer, nbytes, time_stamp);
             free(buffer);
           }
           else {
+            // i guess this part is handling the disconnexions, right ?
             // close le client, diminue le nbr de clients
             close(clients[i]);
             nclients--;
             // On deplace le dernier socket a la place de libre pour ne pas faire de trou.
             clients[i] = clients[nclients];
+            // send diconnexion message
+            char disconn_txt[14] = "disconnected.";
+            send_to_clients(&disconn_txt, sizeof(disconn_txt), time_stamp);
         } }
     } }
   }
   return 0;
+}
+
+void send_to_clients(char *buffer, size_t nbytes, time_t *time_stamp) {
+  for (int j = 0; j < nclients; j++) {
+    ssend(clients[j], buffer, nbytes, time_stamp);
+  }
 }
 
 /*
