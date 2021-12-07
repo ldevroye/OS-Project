@@ -21,8 +21,8 @@ int _checked(int ret, char* calling_function) {
  * Function name is 'ssend' instead of 'send' because the latter already exists.
  */
 int ssend(int sock, void* data, size_t len) {
-  checked(write(sock, &len, sizeof(len)));
-  return checked(write(sock, data, len));
+  checked(write(sock, &len, sizeof(len)));        // envoie la length du message
+  return checked(write(sock, data, len));         // envoie message
 }
 
 /**
