@@ -4,6 +4,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <time.h>
 
 #include "common.h"
 
@@ -34,8 +35,12 @@ void send_messages() {
     // Supprimer le \n
     size_t len = strlen(buffer);
     buffer[len - 1] = '\0';
+
+    time_t timestamp;
+    time_t now = time(&timestamp);
+
     // On garde la même taille de string pour explicitement envoyer le '\0'
-    nbytes = ssend(sock, buffer, len);                  // envoie le message
+    nbytes = ssend(sock, buffer, len, timestamp);                  // envoie le message
     if (nbytes > 0) {
       // TODO check envoi worked ?
     }
@@ -45,9 +50,13 @@ void send_messages() {
 void recv_messages() {
   while (true) {
     char *recvbuffer;
-    nbytes = receive(sock, (void *)&recvbuffer);      // reçoit message
+    time_t *time_stamp;
+    struct tm *struct_time;
+    struct_time = localtime(&timestamp);
+
+    nbytes = receive(sock, (void *)&recvbuffer, (void *)&time_stamp);      // reçoit message
     if (nbytes > 0) {                                 // vérifie message a été reçu
-      printf("Client received %s\n", recvbuffer);
+      printf("%s : %s\n", asctime(time_stamp), recvbuffer);
       free(recvbuffer);
     }
   }

@@ -20,20 +20,32 @@ int _checked(int ret, char* calling_function) {
  * @brief Send data under the form <size_t len><...data>
  * Function name is 'ssend' instead of 'send' because the latter already exists.
  */
-int ssend(int sock, void* data, size_t len) {
+int ssend(int sock, void* data, size_t len, void* tstamp) {
   checked(write(sock, &len, sizeof(len)));        // envoie la length du message
+  checked(write(sock, tstamp, sizeof(tstamp)));   // envoie la timestamp
   return checked(write(sock, data, len));         // envoie message
 }
 
 /**
  * @brief Receive data under the form <size_t len><data...>.
  */
-size_t receive(int sock, void** dest) {
+size_t receive(int sock, void** dest, void** tstamp) {
   size_t nbytes_to_receive;
   if (checked(read(sock, &nbytes_to_receive, sizeof(nbytes_to_receive))) == 0) {
     // Connection closed
     return 0;
   };
+
+  size_t t_length = 8;
+  unsigned char* t_buffer = malloc(t_length);
+  if (t_buffer == NULL) {
+    fprintf(stderr, "malloc could not allocate %zd bytes", t_length);
+    perror("");
+    exit(1);
+  }
+  checked(read(sock, &t_buffer, t_length));
+  *tstamp = t_buffer;
+
   unsigned char* buffer = malloc(nbytes_to_receive);
   if (buffer == NULL) {
     fprintf(stderr, "malloc could not allocate %zd bytes", nbytes_to_receive);
@@ -50,6 +62,7 @@ size_t receive(int sock, void** dest) {
     nbytes_to_receive -= received;
   }
   *dest = buffer;
+
   return total_received;
 }
 

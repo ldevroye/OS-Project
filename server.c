@@ -32,6 +32,7 @@ int main(int argc, char *argv[]) {
   while (true) {
     FD_ZERO(&readfds);                      // clear l'ensemble
     FD_SET(master_socket, &readfds);
+    
     int max_fd = master_socket;
     for (int i = 0; i < nclients; i++) {    // pour chaque client -> lit ce que le client envoi
       FD_SET(clients[i], &readfds);
@@ -44,21 +45,24 @@ int main(int argc, char *argv[]) {
 
     if (FD_ISSET(master_socket, &readfds)) {
       // Si c'est le master socket qui a des donnees, c'est une nouvele connexion.
-      // -> crée nouveau socket client, augmente nbr de clents
+      // -> crée nouveau socket client, augmente nbr de clients
       clients[nclients] = accept(master_socket, (struct sockaddr *)&address, (socklen_t *)&addrlen);
       nclients++;
-    } else {
+    }
+    else {
       // Sinon, c'est un message d'un client
       for (int i = 0; i < nclients; i++) {
         if (FD_ISSET(clients[i], &readfds)) {                       // for each client -> check si quelque chose à lire
           char *buffer;
-          size_t nbytes = receive(clients[i], (void *)&buffer);
+          time_t *time_stamp;
+          size_t nbytes = receive(clients[i], (void *)&buffer, (void *)&time_stamp);
           if (nbytes > 0) {  // closed
             for (int j = 0; j < nclients; j++) {
-              ssend(clients[i], buffer, nbytes);
+              ssend(clients[i], buffer, nbytes, time_stamp);
             }
             free(buffer);
-          } else {
+          }
+          else {
             // close le client, diminue le nbr de clients
             close(clients[i]);
             nclients--;
