@@ -13,6 +13,15 @@
 
 int main(int argc, char *argv[]) {
   // TODO gestion des erreurs dans les arguments
+  // TODO C++
+  int port
+  if (argc == 1 || !(argc == 2 && argv[1].isdigit() && argv[1] > 1024)) {
+    perror("TODO")
+    exit(1)
+  }
+  else port = argv[1]
+
+  signal(SIGINT, quit_server);
 
   // create socket with default parameters
   int opt = 1;
@@ -23,7 +32,7 @@ int main(int argc, char *argv[]) {
   struct sockaddr_in address;
   address.sin_family = AF_INET;
   address.sin_addr.s_addr = INADDR_ANY;
-  address.sin_port = htons(8080);
+  address.sin_port = htons(port);
   checked(bind(master_socket, (struct sockaddr *)&address, sizeof(address)));
   checked(listen(master_socket, 3));
 
@@ -81,6 +90,14 @@ int main(int argc, char *argv[]) {
 void send_to_clients(char *buffer, size_t nbytes, time_t *time_stamp) {
   for (int j = 0; j < nclients; j++) {
     ssend(clients[j], buffer, nbytes, time_stamp);
+  }
+}
+
+void quit_server(int sig) {
+  if (sig == SIGINT) {
+    for (int i = 0; i < nclients; i++) {
+      close(clients[i]); }
+    exit(0);
   }
 }
 

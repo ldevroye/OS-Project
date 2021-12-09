@@ -10,21 +10,38 @@
 
 int main(int argc, char const *argv[]) {
   // create client socket with default parameters
+
+  int port
+  if (argc < 4 || !(argc == 4 && argv[3].isdigit() && argv[3] > 1024)) {
+    perror("TODO")
+    exit(1)
+  }
+  else port = argv[1]
+
   int sock = checked(socket(AF_INET, SOCK_STREAM, 0));
   struct sockaddr_in serv_addr;
   serv_addr.sin_family = AF_INET;
-  serv_addr.sin_port = htons(8080);
+  serv_addr.sin_port = htons(argv[3]);
   // Conversion de string vers IPv4 ou IPv6 en binaire
-  checked(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr));
+  if (checked(inet_pton(AF_INET, argv[2], &serv_addr.sin_addr)) != 1) {
+    perror("TODO")
+    exit(1)
+  }
   checked(connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)));
 
   // create thread pour gestion de la réception des messages
   pthread_t tids[1];  // thread ids
   pthread_create(&tids[0], NULL, recv_messages, NULL);
+
+
   
   send_messages();
 
   return 0;
+}
+
+void send_pseudo(char* pseudo) {
+
 }
 
 void send_messages() {
@@ -32,6 +49,12 @@ void send_messages() {
   char buffer[1024];
   ssize_t nbytes = 1;
   while (nbytes > 0 && fgets(buffer, 1024, stdin)) {    // lit l'input de stdin
+
+/*
+    if (cin.eof()) {
+      
+    }*/
+
     // Supprimer le \n
     size_t len = strlen(buffer);
     buffer[len - 1] = '\0';
